@@ -49,6 +49,8 @@ jobs:
       run: |
         go get github.com/mattn/goveralls
     - name: Test
+      env:
+        COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin   
         go test -v -covermode=count -coverprofile=coverage.out
