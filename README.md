@@ -1,5 +1,7 @@
 # golang ci template using github actions
 
+**WORK IN PROGRESS**
+
 [![Coverage Status](https://coveralls.io/repos/github/jandelgado/golang-ci-template-github-actions/badge.svg?branch=master)](https://coveralls.io/github/jandelgado/golang-ci-template-github-actions?branch=master) 
 [![Go Report Card](https://goreportcard.com/badge/github.com/jandelgado/golang-ci-template-github-actions)](https://goreportcard.com/report/github.com/jandelgado/golang-ci-template-github-actions) 
 
@@ -34,5 +36,6 @@ As soon as the release-tag is created, Travis will run the deployment step.
 # Test coverage (coveralls)
 
 Create coveralls account and activate coveralls for repositiory. In github,
-create a secret `COVERALLS_TOKEN` with the api token. (TODO)
+create a secret `COVERALLS_TOKEN` with the api coveralls api token for this
+repo. 
 
