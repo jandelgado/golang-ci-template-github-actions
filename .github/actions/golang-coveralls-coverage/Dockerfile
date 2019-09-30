@@ -1,3 +1,5 @@
+# note: we also need a running go executable in the container, so we keep
+# this as the base 
 FROM golang:1.13-alpine 
 
 WORKDIR /go/src/app
