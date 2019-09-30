@@ -1,9 +1,5 @@
 #!/bin/sh
-
 set -eu
 
-pwd
-ls -l $GITHUP_WORKSPACE
-
 cd $GITHUB_WORKSPACE
-/covfmt < coverage.out > coverage.lcov
+/covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
