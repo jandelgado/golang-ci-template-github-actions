@@ -39,3 +39,5 @@ Create coveralls account and activate coveralls for repositiory. In github,
 create a secret `COVERALLS_TOKEN` with the api coveralls api token for this
 repo. 
 
+Don't forget to enable `Leave comments (x) ` in coveralls, under `repo
+settings` > `pull request alerts`.  
