@@ -6,4 +6,4 @@ pwd
 ls -l $GITHUP_WORKSPACE
 
 cd $GITHUB_WORKSPACE
-/app < coverage.out > coverage.lcov
+/covfmt < coverage.out > coverage.lcov
