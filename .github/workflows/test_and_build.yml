@@ -52,7 +52,7 @@ jobs:
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin   
         go test -v -covermode=count -coverprofile=coverage.out
-        covfmt < coverage.out | sed -e "s/github.com\/jandelgado\/golang-ci-template-github-actions\///g" > coverage.lcov
+        covfmt < coverage.out > coverage.lcov
     - name: Coveralls
       uses: coverallsapp/github-action@v1.0.1
       with:
