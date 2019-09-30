@@ -52,7 +52,9 @@ jobs:
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin   
         go test -v -covermode=count -coverprofile=coverage.out
-        covfmt < coverage.out > coverage.lcov
+        covfmt < coverage.out > coverage.lcov2
+    - name: Calc coverage using action
+      uses: ./.github/actions/golang-coveralls-coverage
     - name: Coveralls
       uses: coverallsapp/github-action@v1.0.1
       with:
