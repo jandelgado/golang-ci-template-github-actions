@@ -38,3 +38,4 @@ As soon as the release-tag is created, Travis will run the deployment step.
 Using the [coveralls github action](https://github.com/marketplace/actions/coveralls-github-action) and
 converting coverage information to lcov-format before.
 
+
