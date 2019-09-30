@@ -9,11 +9,13 @@ ls -l
 echo "*******************************"
 
 echo /covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
+ls -l /covfmt
 /covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
 
 ls -l $INPUT_INFILE || true
 ls -l $INPUT_OUTFILE || true
 
+echo "****INFILE****"
 cat $INPUT_INFILE || true
-echo "*******************************"
+echo "****OUTFILE****"
 cat $INPUT_OUTFILE || true
