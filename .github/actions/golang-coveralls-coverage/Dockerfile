@@ -8,5 +8,4 @@ RUN go get -u github.com/jandelgado/covfmt
 FROM gcr.io/distroless/base
 COPY --from=build /go/bin/covfmt /
 
-COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/covfmt"]
