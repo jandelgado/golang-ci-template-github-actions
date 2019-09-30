@@ -9,8 +9,8 @@ ls -l
 echo "*******************************"
 
 echo /covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
-ls -l /covfmt
-/covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
+ls -l /go/bin/covfmt
+/go/bin/covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
 
 ls -l $INPUT_INFILE || true
 ls -l $INPUT_OUTFILE || true
