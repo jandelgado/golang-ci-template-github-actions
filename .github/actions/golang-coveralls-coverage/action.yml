@@ -14,6 +14,6 @@ runs:
   image: 'Dockerfile'
   args:
     - "-coverin"
-    - "$${{ env.GITHUB_WORKSPACE}}/${{ inputs.infile }}"
+    - "$GITHUB_WORKSPACE/${{ inputs.infile }}"
     - "-lcovout"
-    - "$${{ env.GITHUB_WORKSPACE}}/${{ inputs.outfile }}"
+    - "$GITHUB_WORKSPACE/${{ inputs.outfile }}"
