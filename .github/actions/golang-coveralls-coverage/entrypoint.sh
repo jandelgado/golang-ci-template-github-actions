@@ -1,5 +1,7 @@
 #!/bin/sh
 set -eu
+unset GOROOT
+unset GOPATH
 
 env
 echo "IN=$INPUT_INFILE OUT=$INPUT_OUTFILE GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
@@ -8,7 +10,6 @@ ls -l
 
 echo "*******************************"
 
-echo /covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
 ls -l /go/bin/covfmt
 /go/bin/covfmt -infile "$INPUT_INFILE" -outfile "$INPUT_OUTFILE"
 
