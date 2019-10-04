@@ -35,9 +35,9 @@ As soon as the release-tag is created, Travis will run the deployment step.
 
 # Test coverage (coveralls)
 
-Create coveralls account and activate coveralls for repositiory. In github,
-create a secret `COVERALLS_TOKEN` with the api coveralls api token for this
-repo. 
+Using the [coveralls github action](https://github.com/marketplace/actions/coveralls-github-action) and
+converting coverage information to lcov-format before.
+
 
 Don't forget to enable `Leave comments (x) ` in coveralls, under `repo
 settings` > `pull request alerts`.  

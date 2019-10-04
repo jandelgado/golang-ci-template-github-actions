@@ -1,0 +1,14 @@
+name: 'convert golang coverage to lcov'
+description: 'convert golang coverage to lcov'
+inputs:
+  infile:  
+    description: 'go coverage input file'
+    required: true
+    default: 'coverage.out'
+  outfile:  
+    description: 'lcov output file'
+    required: true
+    default: 'coverage.lcov'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
