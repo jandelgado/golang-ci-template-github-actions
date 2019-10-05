@@ -12,10 +12,11 @@
 * [Info](#info)
 * [Creating a release](#creating-a-release)
 * [Test coverage (coveralls)](#test-coverage-coveralls)
+* [Author](#author)
 
 <!-- vim-markdown-toc -->
 
-# Info 
+## Info 
 This repository serves as a template for github-actions integrated go projects.  It
 consists of a `hello, world!` like example in source file `main.go` which gets
 compiled into binary `ci-test`. The `pre-commit` script runs some checks on the
@@ -28,17 +29,25 @@ page](https://github.com/jandelgado/ci-test/releases/)i (TODO).
 For demonstration purposes, both a linux- and windows target is created and
 packetized in a zip-archive.
 
-# Creating a release
+## Creating a release
 
 On your repositories home (github.com) go to `Releases` > `create realease`.
 As soon as the release-tag is created, Travis will run the deployment step.
 (TODO)
 
-# Test coverage (coveralls)
+## Test coverage (coveralls)
 
-Using the [coveralls github action](https://github.com/marketplace/actions/coveralls-github-action) and
-converting coverage information to lcov-format before.
-
+We use the [gcov2lcov-action](https://github.com/jandelgado/gcov2lcov-action) to 
+first convert the golang test coverage to lcov format and then upload it using
+the [coveralls github action](https://github.com/marketplace/actions/coveralls-github-action).
 
 Don't forget to enable `Leave comments (x) ` in coveralls, under `repo
-settings` > `pull request alerts`.  
+settings` > `pull request alerts`, so that the coveralls-action posts a comment
+with the test coverage to affected pull requests:
+
+![pr screenshot](images/pr.png)
+
+## Author
+
+Jan Delgado
+
