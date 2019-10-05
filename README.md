@@ -2,7 +2,8 @@
 
 **WORK IN PROGRESS**
 
-[![Coverage Status](https://coveralls.io/repos/github/jandelgado/golang-ci-template-github-actions/badge.svg?branch=master)](https://coveralls.io/github/jandelgado/golang-ci-template-github-actions?branch=master) 
+[![Build Status](https://github.com/jandelgado/golang-ci-template-github-actions/workflows/test%20and%20build/badge.svg)](https://github.com/jandelgado/golang-ci-template-github-actions/actions?workflow=test%20and%20build)
+[![Coverage Status](https://coveralls.io/repos/github/jandelgado/golang-ci-template-github-actions/badge.svg?branch=master)](https://coveralls.io/github/jandelgado/golang-ci-template-github-actions?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jandelgado/golang-ci-template-github-actions)](https://goreportcard.com/report/github.com/jandelgado/golang-ci-template-github-actions) 
 
 
@@ -22,7 +23,7 @@ code.
 
 When a new release is created, the released-artifacts are automatically
 uploaded to github and available on the [release
-page](https://github.com/jandelgado/ci-test/releases/)i (TODO).  
+page](https://github.com/jandelgado/ci-test/releases/)i (TODO).
 
 For demonstration purposes, both a linux- and windows target is created and
 packetized in a zip-archive.

@@ -1,5 +1,5 @@
 on: [push, pull_request]
-name: run tests
+name: test and build
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
         export PATH=$PATH:$(go env GOPATH)/bin   
         go test -v -covermode=count -coverprofile=coverage.out
     - name: Convert coverage to lcov
-      uses: jandelgado/gcov2lcov-action@v2
+      uses: jandelgado/gcov2lcov-action@v1.0.0
       with:
           infile: coverage.out
           outfile: coverage.lcov
