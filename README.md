@@ -40,9 +40,11 @@ As soon as the release-tag is created, Travis will run the deployment step.
 
 ## Test coverage (coveralls)
 
-We use the [gcov2lcov-action](https://github.com/jandelgado/gcov2lcov-action) to 
+We use the
+[gcov2lcov-action](https://github.com/marketplace/actions/gcov2lcov-action) to
 first convert the golang test coverage to lcov format and then upload it using
-the [coveralls github action](https://github.com/marketplace/actions/coveralls-github-action).
+the [coveralls github
+action](https://github.com/marketplace/actions/coveralls-github-action).
 
 Don't forget to enable `Leave comments (x) ` in coveralls, under `repo
 settings` > `pull request alerts`, so that the coveralls-action posts a comment
