@@ -17,10 +17,13 @@
 <!-- vim-markdown-toc -->
 
 ## Info 
-This repository serves as a template for github-actions integrated go projects.  It
-consists of a `hello, world!` like example in source file `main.go` which gets
-compiled into binary `ci-test`. The `pre-commit` script runs some checks on the
-code. 
+
+This repository serves as a template for github-actions integrated go projects.
+It consists of a `hello, world!` like example in source file `main.go` which
+gets compiled into binary `golang-ci-template-github-actions`. The `pre-commit`
+script runs some checks on the code, before the unit tests are executed. When
+the build stage was successful, build artifacts are uploaded and available
+in the CI job status.
 
 When a new release is created, the released-artifacts are automatically
 uploaded to github and available on the [release
