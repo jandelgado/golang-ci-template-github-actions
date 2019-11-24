@@ -1,0 +1,47 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Upload Release Asset
+
+jobs:
+  build:
+    name: Upload Release Assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Download build artefacts
+        uses: actions/download-artifact@v1
+        with:
+          name: binaries
+      - name: Create asset zips
+        run: |
+          zip rabtap-${GITHUB_REV}-windows-amd64.zip bin/rabtap-win-amd64.exe README.md
+          zip rabtap-${GITHUB_REV}-linux-amd64.zip bin/rabtap-linux-amd64 README.md
+          zip rabtap-${GITHUB_REV}-darwin-amd64.zip bin/rabtap-darwin-amd64 README.md
+          sha256sum *zip > SHASUMS256.txt
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./
+          asset_name: rabtap-${{ github.ref }}-windows-amd64.zip
+          asset_content_type: application/zip
