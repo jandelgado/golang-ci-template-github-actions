@@ -1,4 +1,11 @@
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
 name: test and build
 jobs:
   lint:
@@ -15,7 +22,7 @@ jobs:
         go get github.com/golangci/golangci-lint/cmd/golangci-lint
     - name: Run linters
       run: |
-        export PATH=$PATH:$(go env GOPATH)/bin   
+        export PATH=$PATH:$(go env GOPATH)/bin
         ./pre-commit
 
   test:
