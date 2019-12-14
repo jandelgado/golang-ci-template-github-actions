@@ -64,7 +64,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./assets
+          asset_path: ./assets/ci-test-${{ github.ref }}-linux-amd64.zip
           asset_name: ci-test-${{ github.ref }}-linux-amd64.zip
           asset_content_type: application/zip
 
