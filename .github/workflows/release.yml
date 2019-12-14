@@ -33,6 +33,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
+      - name: Branch name
+        id: branch_name
+        run: |
+          echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
+          echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
+          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
       - uses: actions/checkout@v1
       - name: Download build artefacts
         uses: actions/download-artifact@v1
@@ -43,8 +49,8 @@ jobs:
         run: |
           ls -lR
           mkdir assets
-          zip assets/ci-test-${GITHUB_REV}-windows-amd64.zip bin/ci-test-windows-amd64.exe README.md
-          zip assets/ci-test-${GITHUB_REV}-linux-amd64.zip bin/ci-test-linux-amd64 README.md
+          zip assets/ci-test-windows-amd64.zip bin/ci-test-windows-amd64.exe README.md
+          zip assets/ci-test-linux-amd64.zip bin/ci-test-linux-amd64 README.md
           sha256sum assets/*zip > assets/SHASUMS256.txt
       - name: Create Release
         id: create_release
@@ -62,9 +68,10 @@ jobs:
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./assets/ci-test-${{ github.ref }}-linux-amd64.zip
-          asset_name: ci-test-${{ github.ref }}-linux-amd64.zip
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./assets/ci-test-linux-amd64.zip
+          asset_name: ci-test-${SOURCE_TAG}-linux-amd64.zip
           asset_content_type: application/zip
 
