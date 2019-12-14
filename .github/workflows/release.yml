@@ -10,7 +10,6 @@ jobs:
   build:
     name: build binaries
     runs-on: ubuntu-latest
-    needs: [lint, test]
     steps:
       - name: Install Go
         uses: actions/setup-go@v1
