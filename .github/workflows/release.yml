@@ -45,7 +45,7 @@ jobs:
           mkdir assets
           zip assets/ci-test-${GITHUB_REV}-windows-amd64.zip bin/ci-test-windows-amd64.exe README.md
           zip assets/ci-test-${GITHUB_REV}-linux-amd64.zip bin/ci-test-linux-amd64 README.md
-          sha256sum *zip > assets/SHASUMS256.txt
+          sha256sum assets/*zip > assets/SHASUMS256.txt
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
