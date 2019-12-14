@@ -11,6 +11,9 @@ jobs:
     name: Upload Release Assets
     runs-on: ubuntu-latest
     steps:
+      - name: checkout 
+        uses: actions/checkout@master
+        ref: ${{ github.ref }}
       - name: Download build artefacts
         uses: actions/download-artifact@v1
         with:
@@ -23,7 +26,6 @@ jobs:
           zip rabtap-${GITHUB_REV}-linux-amd64.zip bin/rabtap-linux-amd64 README.md
           zip rabtap-${GITHUB_REV}-darwin-amd64.zip bin/rabtap-darwin-amd64 README.md
           sha256sum *zip > SHASUMS256.txt
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
