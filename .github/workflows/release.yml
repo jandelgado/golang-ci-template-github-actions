@@ -11,12 +11,12 @@ jobs:
     name: Upload Release Assets
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v1
       - name: Download build artefacts
         uses: actions/download-artifact@v1
         with:
           name: binaries
+      - name: ls
+        run: ls -lR
       - name: Create asset zips
         run: |
           zip rabtap-${GITHUB_REV}-windows-amd64.zip bin/rabtap-win-amd64.exe README.md
