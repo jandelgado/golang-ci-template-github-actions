@@ -33,25 +33,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
+
       - name: Branch name
         id: branch_name
         run: |
           echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
           echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
           echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+
       - uses: actions/checkout@v1
+
       - name: Download build artefacts
         uses: actions/download-artifact@v1
         with:
           name: binaries
           path: bin/
       - name: Create asset zips
+        env:
+          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         run: |
-          ls -lR
           mkdir assets
-          zip assets/ci-test-windows-amd64.zip bin/ci-test-windows-amd64.exe README.md
-          zip assets/ci-test-linux-amd64.zip bin/ci-test-linux-amd64 README.md
+          zip assets/ci-test-${SOURCE_TAG}-windows-amd64.zip bin/ci-test-windows-amd64.exe README.md
+          zip assets/ci-test-${SOURCE_TAG}-linux-amd64.zip bin/ci-test-linux-amd64 README.md
           sha256sum assets/*zip > assets/SHASUMS256.txt
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
@@ -60,11 +65,18 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          draft: false
+          draft: true
           prerelease: false
 
+      - name: Upload release assets
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: 'assets/*'
+
       - name: Upload Release Asset
-        id: upload-release-asset 
+        id: upload_release_assets
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,6 +84,6 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./assets/ci-test-linux-amd64.zip
-          asset_name: ci-test-${SOURCE_TAG}-linux-amd64.zip
+          asset_name: ci-test-${{ steps.branch_name.outputs.SOURCE_TAG }}-linux-amd64.zip
           asset_content_type: application/zip
 
