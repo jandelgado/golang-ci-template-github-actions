@@ -1,11 +1,8 @@
 on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  release:
+    types: [created]
 
-name: Upload Release Asset
-
+name: Upload release assets after release is created
 jobs:
   build:
     name: build binaries
@@ -48,6 +45,7 @@ jobs:
         with:
           name: binaries
           path: bin/
+
       - name: Create asset zips
         env:
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
@@ -57,33 +55,10 @@ jobs:
           zip assets/ci-test-${SOURCE_TAG}-linux-amd64.zip bin/ci-test-linux-amd64 README.md
           sha256sum assets/*zip > assets/SHASUMS256.txt
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: true
-          prerelease: false
-
       - name: Upload release assets
         uses: skx/github-action-publish-binaries@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: 'assets/*'
-
-      - name: Upload Release Asset
-        id: upload_release_assets
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./assets/ci-test-linux-amd64.zip
-          asset_name: ci-test-${{ steps.branch_name.outputs.SOURCE_TAG }}-linux-amd64.zip
-          asset_content_type: application/zip
+          args: './assets/*'
 
