@@ -1,15 +1,22 @@
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
 name: test and build
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2-beta
       with:
         go-version: 1.15.x
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Install golangci-lint
       run: |
         go get github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -27,11 +34,11 @@ jobs:
     steps:
     - name: Install Go
       if: success()
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2-beta
       with:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Run tests
       run: go test -v -covermode=count
 
@@ -40,17 +47,17 @@ jobs:
     steps:
     - name: Install Go
       if: success()
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2-beta
       with:
         go-version: 1.15.x
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Calc coverage
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin
         go test -v -covermode=count -coverprofile=coverage.out
     - name: Convert coverage to lcov
-      uses: jandelgado/gcov2lcov-action@v1.0.4
+      uses: jandelgado/gcov2lcov-action@v1.0.5
       with:
           infile: coverage.out
           outfile: coverage.lcov
@@ -65,11 +72,11 @@ jobs:
     needs: [lint, test]
     steps:
     - name: Install Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2-beta
       with:
         go-version: 1.15.x
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: build
       run: |
         export GO111MODULE=on
