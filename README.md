@@ -1,6 +1,6 @@
 # golang ci template using github actions
 
-**WORK IN PROGRESS**
+**WORK IN PROGRESS, but can already be used**
 
 [![Build Status](https://github.com/jandelgado/golang-ci-template-github-actions/workflows/test%20and%20build/badge.svg)](https://github.com/jandelgado/golang-ci-template-github-actions/actions?workflow=test%20and%20build)
 [![Coverage Status](https://coveralls.io/repos/github/jandelgado/golang-ci-template-github-actions/badge.svg?branch=master)](https://coveralls.io/github/jandelgado/golang-ci-template-github-actions?branch=master)
@@ -34,9 +34,9 @@ packetized in a zip-archive.
 
 ## Creating a release
 
-On your repositories home (github.com) go to `Releases` > `create realease`.
-As soon as the release-tag is created, Travis will run the deployment step.
-(TODO)
+On your repositories home (github.com) go to `Releases` > `create release`.
+As soon as the release-tag is created, the artifacts will be built and uploaded
+to the release page.
 
 ## Test coverage (coveralls)
 

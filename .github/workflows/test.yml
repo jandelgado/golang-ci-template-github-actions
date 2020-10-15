@@ -6,13 +6,13 @@ on:
     branches:
       - master
 
-name: test and build
+name: run tests
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@v2-beta
+      uses: actions/setup-go@v2
       with:
         go-version: 1.15.x
     - name: Checkout code
@@ -22,7 +22,7 @@ jobs:
         go get github.com/golangci/golangci-lint/cmd/golangci-lint
     - name: Run linters
       run: |
-        export PATH=$PATH:$(go env GOPATH)/bin
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
         ./pre-commit
 
   test:
@@ -34,7 +34,7 @@ jobs:
     steps:
     - name: Install Go
       if: success()
-      uses: actions/setup-go@v2-beta
+      uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
@@ -47,14 +47,13 @@ jobs:
     steps:
     - name: Install Go
       if: success()
-      uses: actions/setup-go@v2-beta
+      uses: actions/setup-go@v2
       with:
         go-version: 1.15.x
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Calc coverage
       run: |
-        export PATH=$PATH:$(go env GOPATH)/bin
         go test -v -covermode=count -coverprofile=coverage.out
     - name: Convert coverage to lcov
       uses: jandelgado/gcov2lcov-action@v1.0.5
@@ -67,23 +66,3 @@ jobs:
           github-token: ${{ secrets.github_token }}
           path-to-lcov: coverage.lcov
 
-  build:
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-    steps:
-    - name: Install Go
-      uses: actions/setup-go@v2-beta
-      with:
-        go-version: 1.15.x
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: build
-      run: |
-        export GO111MODULE=on
-        GOOS=windows GOARCH=amd64 go build -o bin/ci-test-windows-amd64.exe
-        GOOS=linux   GOARCH=amd64 go build -o bin/ci-test-linux-amd64
-    - name: upload artifacts
-      uses: actions/upload-artifact@master
-      with:
-        name: binaries
-        path: bin/
