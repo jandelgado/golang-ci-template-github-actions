@@ -1,6 +1,5 @@
 # golang ci template using github actions
 
-**WORK IN PROGRESS, but can already be used**
 
 [![Build Status](https://github.com/jandelgado/golang-ci-template-github-actions/workflows/test%20and%20build/badge.svg)](https://github.com/jandelgado/golang-ci-template-github-actions/actions?workflow=test%20and%20build)
 [![Coverage Status](https://coveralls.io/repos/github/jandelgado/golang-ci-template-github-actions/badge.svg?branch=master)](https://coveralls.io/github/jandelgado/golang-ci-template-github-actions?branch=master)
@@ -20,23 +19,19 @@
 
 This repository serves as a template for github-actions integrated go projects.
 It consists of a `hello, world!` like example in source file `main.go` which
-gets compiled into binary `golang-ci-template-github-actions`. The `pre-commit`
-script runs some checks on the code, before the unit tests are executed. When
-the build stage was successful, build artifacts are uploaded and available
-in the CI job status.
+gets compiled into binary `golang-ci-template-github-actions`. The CI runs some
+[linters](https://github.com/golangci/golangci-lint-action) on the code, before
+the unit tests are executed. When the build stage was successful, build
+artifacts are uploaded and available in the CI job status.
 
-When a new release is created, the released-artifacts are automatically
-uploaded to github and available on the [release
-page](https://github.com/jandelgado/ci-test/releases/)i (TODO).
-
-For demonstration purposes, both a linux- and windows target is created and
+For demonstration purposes, a linux, macos and windows target are created and
 packetized in a zip-archive.
 
 ## Creating a release
 
 On your repositories home (github.com) go to `Releases` > `create release`.
-As soon as the release-tag is created, the artifacts will be built and uploaded
-to the release page.
+When a new release is created, the released-artifacts are automatically
+uploaded to github and available on the [releases page](/releases)
 
 ## Test coverage (coveralls)
 
