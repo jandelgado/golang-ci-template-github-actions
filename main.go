@@ -1,12 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
 
-// Hello just says hello
-func Hello() {
-	fmt.Println("hello, world!")
+	log "github.com/sirupsen/logrus"
+)
+
+func sayHelloTo(who string) string {
+	return fmt.Sprintf("Hello, %s", who)
 }
 
 func main() {
-	Hello()
+	log.Info(sayHelloTo("Jan"))
 }
