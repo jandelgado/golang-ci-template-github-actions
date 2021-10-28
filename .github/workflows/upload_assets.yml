@@ -1,65 +1,55 @@
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - 'v*'
 
-name: Upload release assets after release is created
+name: Upload release assets after tagging
 jobs:
   build:
-    name: build binaries
+    name: create assets
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.15.x
+          go-version: 1.17.x
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: build
-        run: |
-          echo "GO111MODULE=on" >> $GITHUB_ENV
-          GOOS=windows GOARCH=amd64 go build -o bin/ci-test-windows-amd64.exe
-          GOOS=linux   GOARCH=amd64 go build -o bin/ci-test-linux-amd64
-          GOOS=darwin  GOARCH=amd64 go build -o bin/ci-test-macos-amd64
-      - name: upload artifacts
-        uses: actions/upload-artifact@master
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
         with:
-          name: binaries
-          path: bin/
-
-  upload:
-    name: Upload release assets
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-
-      - name: Branch name
-        id: branch_name
-        run: |
-          echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
-          echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
-
-      - uses: actions/checkout@v1
-
-      - name: Download build artefacts
-        uses: actions/download-artifact@v1
-        with:
-          name: binaries
-          path: bin/
-
-      - name: Create asset zips
-        env:
-          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
-        run: |
-          mkdir assets
-          zip assets/ci-test-${SOURCE_TAG}-windows-amd64.zip bin/ci-test-windows-amd64.exe README.md
-          zip assets/ci-test-${SOURCE_TAG}-linux-amd64.zip bin/ci-test-linux-amd64 README.md
-          zip assets/ci-test-${SOURCE_TAG}-darwin-amd64.zip bin/ci-test-darwin-amd64 README.md
-          sha256sum assets/*zip > assets/SHASUMS256.txt
-
-      - name: Upload release assets
-        uses: skx/github-action-publish-binaries@master
+          version: latest
+          args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-image:
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+    name: create docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
-          args: './assets/*'
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: build Docker image
+        run: |
+          VERSION=$(git describe --tags)
+          docker build --build-arg "version=$VERSION" --tag ${IMAGE_NAME} .
+
+      - name: push Docker image
+        run: |
+          TAG=$(git describe --tags)
+          docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}
+          docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:${TAG}
+          docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:latest
+          docker push ${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}
+          docker push ${REGISTRY}/${IMAGE_NAME}:${TAG}
+          docker push ${REGISTRY}/${IMAGE_NAME}:latest
+

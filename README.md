@@ -18,20 +18,43 @@
 ## Info 
 
 This repository serves as a template for github-actions integrated go projects.
-It consists of a `hello, world!` like example in source file `main.go` which
-gets compiled into binary `golang-ci-template-github-actions`. The CI runs some
-[linters](https://github.com/golangci/golangci-lint-action) on the code, before
-the unit tests are executed. When the build stage was successful, build
-artifacts are uploaded and available in the CI job status.
+It consists of a `hello, world!` like example in source file [main.go](main.go)
+which gets compiled into the binary `golang-ci-template-github-actions`. The CI
+runs some [linters](https://github.com/golangci/golangci-lint-action) on the
+code, before the unit tests are executed. Test coverage is uploaded to
+coveralls.io.
 
-For demonstration purposes, a linux, macos and windows target are created and
-packetized in a zip-archive.
+[goreleaser](https://github.com/goreleaser/goreleaser) is used to create the
+final multi-plattform assets, which are automatically uploaded to the 
+[release](https://github.com/jandelgado/golang-ci-template-github-actions/releases/latest).
+The [release-process](#creating-a-release) is triggered by pushing a git tag to
+the repository.
+
+Finally, a docker image is built, which gets published to
+[ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/golang-ci-template-github-actions).
+Run it with
+
+```console
+$ docker run --rm  ghcr.io/jandelgado/golang-ci-template-github-actions:latest
+hello, world!
+```
 
 ## Creating a release
 
-On your repositories home (github.com) go to `Releases` > `create release`.
-When a new release is created, the released-artifacts are automatically
-uploaded to github and available on the [releases page](/releases)
+A new release is created by creating a git tag and pushing it, e.g.:
+
+```console
+$ git tag -a "v1.2.3" -m "this is release v1.2.3"
+$ git push origin v1.2.3
+```
+
+The push of the new tag triggers the CI, which uses goreleaser to:
+* build multiplatform release artifacts
+* create a new release 
+* upload the artifacts, which are then available on the [releases page](/jandelgado/golang-ci-template-github-actions/releases). 
+
+Finally, a docker image is built, which gets published to
+[ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/golang-ci-template-github-actions).
 
 ## Test coverage (coveralls)
 
@@ -49,5 +72,5 @@ with the test coverage to affected pull requests:
 
 ## Author
 
-Jan Delgado
+(c) copyright 2021 by Jan Delgado
 
