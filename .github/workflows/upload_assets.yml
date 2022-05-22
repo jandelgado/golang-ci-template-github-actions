@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.17.x
+          go-version: 1.18
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Run GoReleaser
@@ -42,7 +42,6 @@ jobs:
         run: |
           VERSION=$(git describe --tags)
           docker build --build-arg "version=$VERSION" --tag ${IMAGE_NAME} .
-
       - name: push Docker image
         run: |
           TAG=$(git describe --tags)
@@ -52,4 +51,3 @@ jobs:
           docker push ${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}
           docker push ${REGISTRY}/${IMAGE_NAME}:${TAG}
           docker push ${REGISTRY}/${IMAGE_NAME}:latest
-
