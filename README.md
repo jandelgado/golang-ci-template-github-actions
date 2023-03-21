@@ -4,10 +4,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/jandelgado/golang-ci-template-github-actions/badge.svg?branch=master)](https://coveralls.io/github/jandelgado/golang-ci-template-github-actions?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jandelgado/golang-ci-template-github-actions)](https://goreportcard.com/report/github.com/jandelgado/golang-ci-template-github-actions) 
 
-
 <!-- vim-markdown-toc GFM -->
 
 * [Info](#info)
+* [Dependabot](#dependabot)
 * [Creating a release](#creating-a-release)
 * [Test coverage (coveralls)](#test-coverage-coveralls)
 * [Author](#author)
@@ -37,6 +37,12 @@ Run it with
 $ docker run --rm  ghcr.io/jandelgado/golang-ci-template-github-actions:latest
 hello, world!
 ```
+
+## Dependabot
+
+We use [dependabot](https://docs.github.com/en/code-security/dependabot) to 
+both keep the go dependencies as well as the used github action up-to-date.
+The configuration can be found [here](.github/dependabot.yml).
 
 ## Creating a release
 
@@ -69,5 +75,6 @@ with the test coverage to affected pull requests:
 
 ## Author
 
-(c) copyright 2021 by Jan Delgado
+(c) copyright 2021 by Jan Delgado, License MIT
+
 
