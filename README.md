@@ -58,10 +58,8 @@ Finally, a docker image is built, which gets published to
 ## Test coverage (coveralls)
 
 We use the
-[gcov2lcov-action](https://github.com/marketplace/actions/gcov2lcov-action) to
-first convert the golang test coverage to lcov format and then upload it using
-the [coveralls github
-action](https://github.com/marketplace/actions/coveralls-github-action).
+[coveralls-github-action](https://github.com/coverallsapp/github-action) to
+upload the golang coverage to coveralls.
 
 Don't forget to enable `Leave comments (x) ` in coveralls, under `repo
 settings` > `pull request alerts`, so that the coveralls-action posts a comment
