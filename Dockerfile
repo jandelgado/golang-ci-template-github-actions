@@ -1,7 +1,7 @@
 # example docker image for 
 # https://github.com/jandelgado/golang-ci-template-github-actions/
 
-FROM golang:1.17-alpine as builder
+FROM golang:1.23-alpine as builder
 ARG version
 
 WORKDIR /go/src/app
