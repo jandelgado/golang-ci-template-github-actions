@@ -62,6 +62,6 @@ jobs:
           go test -v -covermode=count -coverprofile=coverage.out
       - name: gcov2lcov
         if: true
-        uses: jandelgado/gcov2lcov-action@v1.1.0
+        uses: jandelgado/gcov2lcov-action@v1.0.9
         with:
           version: ${{ matrix.toolver }}
