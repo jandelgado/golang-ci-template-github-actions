@@ -57,10 +57,4 @@ jobs:
         run: |
           go test -v -covermode=count -coverprofile=coverage.out
       - name: gcov2lcov
-        uses: jandelgado/gcov2lcov-action@v1
-      - name: Coveralls
-        uses: coverallsapp/github-action@1134c89e4bf10443bf8f0ec69640b667cfd91041 #2.3.1
-        with:
-          github-token: ${{ secrets.github_token }}
-          file: coverage.out
-          format: golang
+        uses: jandelgado/gcov2lcov-action@v1.0.6
