@@ -57,7 +57,7 @@ jobs:
         run: |
           go test -v -covermode=count -coverprofile=coverage.out
       - name: gcov2lcov
-        uses: jandelgado/gcov2lcov-action@v1.0.9
+        uses: jandelgado/gcov2lcov-action@v1.0.7
         with:
           version: latest
 
