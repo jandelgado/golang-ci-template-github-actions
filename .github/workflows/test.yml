@@ -61,6 +61,6 @@ jobs:
         run: |
           go test -v -covermode=count -coverprofile=coverage.out
       - name: gcov2lcov
-        uses: jandelgado/gcov2lcov-action@${{ .actver }}
+        uses: jandelgado/gcov2lcov-action@{{ .actver }}
         with:
           version: ${{ .toolver }}
