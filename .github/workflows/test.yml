@@ -47,7 +47,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        actver: [ "v1", "v1.1.0", "v1.0.9", "v1.0.7", "v1.0.6"]
         toolver: [ "latest", "v1.1.1", "v1.1.0", "v1.0.9", "v1.0.7", "v1.0.6"]
     steps:
       - name: Install Go
@@ -61,6 +60,22 @@ jobs:
         run: |
           go test -v -covermode=count -coverprofile=coverage.out
       - name: gcov2lcov
-        uses: jandelgado/gcov2lcov-action@${{ matrix.actver }}
+        uses: jandelgado/gcov2lcov-action@v1
+        with:
+          version: ${{ matrix.toolver }}
+      - name: gcov2lcov
+        uses: jandelgado/gcov2lcov-action@v1.1.0
+        with:
+          version: ${{ matrix.toolver }}
+      - name: gcov2lcov
+        uses: jandelgado/gcov2lcov-action@v1.0.9
+        with:
+          version: ${{ matrix.toolver }}
+      - name: gcov2lcov
+        uses: jandelgado/gcov2lcov-action@v1.0.7
+        with:
+          version: ${{ matrix.toolver }}
+      - name: gcov2lcov
+        uses: jandelgado/gcov2lcov-action@v1.0.6
         with:
           version: ${{ matrix.toolver }}
