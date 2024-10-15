@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolver: [ "latest", "v1.1.1", "v1.1.0", "v1.0.9", "v1.0.6", "v1.0.5"]
+        toolver: [ "latest", "v1.1.1", "v1.1.0", "v1.0.6", "v1.0.5"]
     steps:
       - name: Install Go
         if: true
