@@ -16,6 +16,11 @@ jobs:
         with:
             fetch-depth: 0
 
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
       - name: Run linters
         uses: golangci/golangci-lint-action@v6
         with:
