@@ -20,7 +20,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.64.7
-          args:  --out-format=github-actions
+          problem-matchers: true
 
   test:
     runs-on: ubuntu-latest
