@@ -3,10 +3,11 @@ package main
 import "fmt"
 
 // Hello just says hello
-func Hello() {
+func Hello() error {
 	fmt.Println("hello, world!")
+	return nil
 }
 
 func main() {
-	Hello()
+	Hello()     // should trigger linter
 }
