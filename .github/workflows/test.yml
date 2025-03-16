@@ -6,9 +6,6 @@ on:
     branches:
       - master
 
-env:
-  GO_LANG_CI_LINT_VERSION: "v1.60.1"
-
 name: run tests
 jobs:
   lint:
@@ -22,7 +19,7 @@ jobs:
       - name: Run linters
         uses: golangci/golangci-lint-action@v6
         with:
-          version: ${{ env.GO_LANG_CI_LINT_VERSION }}
+          version: v1.64.7
 
   test:
     runs-on: ubuntu-latest
