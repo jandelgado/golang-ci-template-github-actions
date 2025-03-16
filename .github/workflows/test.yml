@@ -7,7 +7,6 @@ on:
       - master
 
 env:
-  GO_VERSION: "1.23.0"
   GO_LANG_CI_LINT_VERSION: "v1.60.1"
 
 name: run tests
@@ -15,47 +14,37 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+
       - name: Run linters
         uses: golangci/golangci-lint-action@v6
         with:
           version: ${{ env.GO_LANG_CI_LINT_VERSION }}
 
   test:
-    strategy:
-      matrix:
-        go-version: [ "1.23.0", "1.22.5" ]
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - name: Install Go
-        if: success()
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Run tests
-        run: go test -v -covermode=count
-
-  coverage:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        if: success()
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Calc coverage
+        with:
+            fetch-depth: 0
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Verify go version
         run: |
-          go test -v -covermode=count -coverprofile=coverage.out
+          echo "GOVERSION=$(go version)" >> $GITHUB_ENV
+          go version
+
+      - name: Run tests
+        run: go test -v -covermode=count -coverprofile=coverage.out
+
       - name: Coveralls
         uses: coverallsapp/github-action@cfd0633edbd2411b532b808ba7a8b5e04f76d2c8 #2.3.4
         with:

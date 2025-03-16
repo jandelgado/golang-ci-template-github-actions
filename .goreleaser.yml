@@ -3,12 +3,18 @@
 version: 2
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
+project_name: go-ci-demo
 builds:
-  - env:
+  - binary: my-app
+    env:
       - CGO_ENABLED=0
     dir: .
+    ldflags:
+      - -s -w
+      - -X "main.BuildCommit={{.FullCommit}}"
+      - -X "main.BuildVersion={{.Tag}}"
+      - -X "main.BuildDate={{.Date}}"
     goos:
       - linux
       - darwin
