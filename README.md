@@ -7,6 +7,7 @@
 <!-- vim-markdown-toc GFM -->
 
 * [Info](#info)
+* [Go-Version](#go-version)
 * [Dependabot](#dependabot)
 * [Creating a release](#creating-a-release)
 * [Test coverage (coveralls)](#test-coverage-coveralls)
@@ -37,6 +38,12 @@ Run it with
 $ docker run --rm  ghcr.io/jandelgado/my-app:latest
 hello, world!
 ```
+
+## Go-Version
+
+The go version to use is configured in `go.mod` with the `toolchain` directive.
+When building locally, set `GOTOOLCHAIN` to `auto` to automatically install
+the configured toolchain.
 
 ## Dependabot
 

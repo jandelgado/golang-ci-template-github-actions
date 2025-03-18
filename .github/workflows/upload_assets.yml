@@ -43,7 +43,7 @@ jobs:
     needs: build
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository_owner }}/${{ env.BINARY }}
+      IMAGE_NAME: ${{ github.repository }}
 
     name: create docker image
     runs-on: ubuntu-latest
