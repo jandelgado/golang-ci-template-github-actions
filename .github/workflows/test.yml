@@ -26,9 +26,9 @@ jobs:
         with:
           version: v1.64.7
           problem-matchers: true
+          args: --issues-exit-code=0    # we expect some findings, but for this demo just continue
 
   test:
-    if: always()        # just added to continue with intentional linter finding, remove
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
