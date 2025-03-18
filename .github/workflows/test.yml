@@ -28,6 +28,7 @@ jobs:
           problem-matchers: true
 
   test:
+    if: always()        # just added to continue with intentional linter finding, remove
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
