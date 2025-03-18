@@ -2,6 +2,9 @@ package main
 
 import "fmt"
 
+// will be set by linker during build
+var BuildVersion = "(version)"
+
 // Hello just says hello
 func Hello() error {
 	fmt.Println("hello, world!")
@@ -9,5 +12,6 @@ func Hello() error {
 }
 
 func main() {
-	Hello()     // should trigger linter
+	Hello() // return value intentionally not checked to trigger linter
+	fmt.Printf("version: %s\n", BuildVersion)
 }

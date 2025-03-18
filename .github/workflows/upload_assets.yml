@@ -3,6 +3,11 @@ on:
     tags:
       - 'v*'
 
+env:
+    # name of the resulting binary and the docker-image. must match name
+    # in .goreleaser.yml
+    BINARY: my-app
+
 name: Upload release assets after tagging
 jobs:
   build:
@@ -31,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: binary
-          path: dist/go-ci-demo_linux_amd64_v1/my-app
+          path: dist/go-ci-demo_linux_amd64_v1/${{ env.BINARY }}
           retention-days: 1
 
   docker-image:
@@ -71,7 +76,7 @@ jobs:
       - name: Prepare docker build
         run: |
           cp Dockerfile ./docker-build
-          chmod 755 ./docker-build/my-app
+          chmod 755 ./docker-build/${{ env.BINARY }}
 
       - name: Get tag info for image label
         id: tag
@@ -84,7 +89,7 @@ jobs:
         with:
           context: ./docker-build
           build-args: |
-            binary=./my-app
+            binary=${{ env.BINARY }}
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
@@ -98,7 +103,7 @@ jobs:
         with:
           context: ./docker-build
           build-args: |
-            binary=./rabtap
+            binary=${{ env.BINARY }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha

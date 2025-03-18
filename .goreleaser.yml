@@ -12,9 +12,7 @@ builds:
     dir: .
     ldflags:
       - -s -w
-      - -X "main.BuildCommit={{.FullCommit}}"
       - -X "main.BuildVersion={{.Tag}}"
-      - -X "main.BuildDate={{.Date}}"
     goos:
       - linux
       - darwin
