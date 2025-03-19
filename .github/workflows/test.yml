@@ -26,7 +26,12 @@ jobs:
         with:
           version: v1.64.7
           problem-matchers: true
-          args: --issues-exit-code=0    # we expect some findings, but for this demo just continue
+          args: --issues-exit-code=0  --out-format=sarif > linter-results.sarif # we expect some findings, but for this demo just continue
+
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ./linter-results.sarif
 
   test:
     runs-on: ubuntu-latest
