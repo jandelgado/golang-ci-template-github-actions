@@ -10,7 +10,9 @@
 * [Go-Version](#go-version)
 * [Dependabot](#dependabot)
 * [Creating a release](#creating-a-release)
-* [Test coverage (coveralls)](#test-coverage-coveralls)
+* [Linting & Test](#linting--test)
+    * [Linter](#linter)
+    * [Test](#test)
 * [Author](#author)
 
 <!-- vim-markdown-toc -->
@@ -19,10 +21,10 @@
 
 This repository serves as a template for github-actions integrated go projects.
 It consists of a `hello, world!` like example in source file [main.go](main.go)
-which gets compiled into the binary `my-app` using goreleaser. The CI
-runs some [linters](https://github.com/golangci/golangci-lint-action) on the
-code, before the unit tests are executed. Test coverage is uploaded to
-coveralls.io.
+which gets compiled into the binary `my-app` using goreleaser. The CI is
+configured to run
+[golangci-linter](https://github.com/golangci/golangci-lint-action) on the code,
+before the unit tests are executed. Test coverage is uploaded to coveralls.io.
 
 [goreleaser](https://github.com/goreleaser/goreleaser) is used to create the
 final multi-plattform assets, which are automatically uploaded to the
@@ -43,7 +45,7 @@ hello, world!
 
 The go version to use is configured in `go.mod` with the `toolchain` directive.
 When building locally, set `GOTOOLCHAIN` to `auto` to automatically install
-the configured toolchain.
+the configured toolchain (introduced with go 1.21).
 
 ## Dependabot
 
@@ -67,12 +69,23 @@ The push of the new tag triggers the CI, which uses goreleaser with
 * create a new release
 * upload the artifacts, which are then available on the [releases page](/jandelgado/golang-ci-template-github-actions/releases).
 
-Finally, a docker image is built, which gets published to
+Finally, a docker image is built using the previously built artefacts. The image
+is published to
 [ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/golang-ci-template-github-actions).
 
 To run goreleaser locally, start the tool with `gorelaser build --snapshot --clean`.
 
-## Test coverage (coveralls)
+## Linting & Test
+
+### Linter
+
+[golangci-linter](https://github.com/golangci/golangci-lint-action) is
+configured for code-linting. The report is uploaded so that linting results
+are visible in the MR:
+
+![pr screenshot](images/linter.png)
+
+### Test
 
 We use the
 [coveralls-github-action](https://github.com/coverallsapp/github-action) to
