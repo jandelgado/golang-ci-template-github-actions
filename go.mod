@@ -1,3 +1,8 @@
 module github.com/jandelgado/golang-ci-template-github-actions
 
-go 1.17
+// minimal go version that must be used
+go 1.23
+
+// build with the go version automatically fi GOTOOLCHAIN=auto
+// is set
+toolchain go1.24.1

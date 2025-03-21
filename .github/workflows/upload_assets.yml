@@ -4,7 +4,9 @@ on:
       - 'v*'
 
 env:
-  GO_VERSION: "1.23.0"
+    # name of the resulting binary and the docker-image. must match name
+    # in .goreleaser.yml
+    BINARY: my-app
 
 name: Upload release assets after tagging
 jobs:
@@ -12,12 +14,16 @@ jobs:
     name: create assets
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Checkout code
-        uses: actions/checkout@v4
+          go-version-file: go.mod
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3 #v6
         with:
@@ -26,31 +32,80 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary
+          path: dist/go-ci-demo_linux_amd64_v1/${{ env.BINARY }}
+          retention-days: 1
+
   docker-image:
+    needs: build
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
+
     name: create docker image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=moby/buildkit:latest
+          #buildkitd-flags: --debug
+
       - name: Log in to the Container registry
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: build Docker image
+
+      # Download the binary artifact from the build job
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: binary
+          path: ./docker-build
+
+      - name: Prepare docker build
         run: |
-          VERSION=$(git describe --tags)
-          docker build --build-arg "version=$VERSION" --tag ${IMAGE_NAME} .
-      - name: push Docker image
+          cp Dockerfile ./docker-build
+          chmod 755 ./docker-build/${{ env.BINARY }}
+
+      - name: Get tag info for image label
+        id: tag
         run: |
-          TAG=$(git describe --tags)
-          docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}
-          docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:${TAG}
-          docker tag ${IMAGE_NAME} ${REGISTRY}/${IMAGE_NAME}:latest
-          docker push ${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}
-          docker push ${REGISTRY}/${IMAGE_NAME}:${TAG}
-          docker push ${REGISTRY}/${IMAGE_NAME}:latest
+            TAG=$(git describe --tags)
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker-build
+          build-args: |
+            binary=${{ env.BINARY }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Tag and push latest
+        if: steps.tag.outputs.tag != 'v99.9.9'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker-build
+          build-args: |
+            binary=${{ env.BINARY }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          no-cache: false
+          pull: false
