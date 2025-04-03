@@ -25,10 +25,10 @@ jobs:
         uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
         with:
           problem-matchers: true
-          args: --issues-exit-code=0  --format=sarif > linter-results.sarif # we expect some findings, but for this demo just continue
+          args: --issues-exit-code=0  --output.sarif.path linter-results.sarif # we expect some findings, but for this demo just continue
 
       - name: Upload SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
         with:
           sarif_file: ./linter-results.sarif
 
