@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
             fetch-depth: 0
 
@@ -22,11 +22,10 @@ jobs:
           go-version-file: go.mod
 
       - name: Run linters
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
         with:
-          version: v1.64.7
           problem-matchers: true
-          args: --issues-exit-code=0  --out-format=sarif > linter-results.sarif # we expect some findings, but for this demo just continue
+          args: --issues-exit-code=0  --format=sarif > linter-results.sarif # we expect some findings, but for this demo just continue
 
       - name: Upload SARIF to Code Scanning
         uses: github/codeql-action/upload-sarif@v3
@@ -37,12 +36,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
             fetch-depth: 0
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
           go-version-file: go.mod
 
@@ -55,7 +54,7 @@ jobs:
         run: go test -v -covermode=count -coverprofile=coverage.out
 
       - name: Coveralls
-        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b #2.3.6
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
         with:
           github-token: ${{ secrets.github_token }}
           file: coverage.out
