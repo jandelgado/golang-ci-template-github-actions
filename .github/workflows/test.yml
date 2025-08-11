@@ -28,7 +28,7 @@ jobs:
           args: --issues-exit-code=0  --output.sarif.path linter-results.sarif # we expect some findings, but for this demo just continue
 
       - name: Upload SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@ff0a06e83cb2de871e5a09832bc6a81e7276941f # v3.28.18
+        uses: github/codeql-action/upload-sarif@76621b61decf072c1cee8dd1ce2d2a82d33c17ed # v3.29.8
         with:
           sarif_file: ./linter-results.sarif
 
