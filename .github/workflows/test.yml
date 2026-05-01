@@ -17,7 +17,7 @@ jobs:
             fetch-depth: 0
 
       - name: Install Go
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
 
@@ -28,7 +28,7 @@ jobs:
           args: --issues-exit-code=0  --output.sarif.path linter-results.sarif # we expect some findings, but for this demo just continue
 
       - name: Upload SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@c793b717bc78562f491db7b0e93a3a178b099162 # v4.32.5
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           sarif_file: ./linter-results.sarif
 
@@ -41,7 +41,7 @@ jobs:
             fetch-depth: 0
 
       - name: Install Go
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
 
