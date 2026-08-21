@@ -15,7 +15,9 @@
 - [Creating a release](#creating-a-release)
 - [Linting & Test](#linting--test)
   - [Linter](#linter)
+  - [Dockerfile linting](#dockerfile-linting)
   - [Test](#test)
+  - [Build verification](#build-verification)
 - [Testing the pipeline](#testing-the-pipeline)
 - [Author](#author)
 
@@ -36,7 +38,8 @@ final multi-plattform assets, which are automatically uploaded to the
 The [release-process](#creating-a-release) is triggered by pushing a git tag to
 the repository.
 
-Finally, a docker image is built, which gets published to
+Finally, a multi-platform (`linux/amd64` and `linux/arm64`) docker image is
+built, which gets published to
 [ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/golang-ci-template-github-actions).
 Run it with
 
@@ -107,11 +110,15 @@ The push of the new tag triggers the CI, which uses goreleaser with
 - create a new release
 - upload the artifacts, which are then available on the [releases page](/jandelgado/golang-ci-template-github-actions/releases).
 
-Finally, a docker image is built using the previously built artifacts. The image
-is published to
+Finally, goreleaser builds a single multi-platform (`linux/amd64` +
+`linux/arm64`) docker image directly, via [`dockers_v2`](.goreleaser.yml)
+(the successor to the now-deprecated `dockers`/`docker_manifests` config, see
+[goreleaser deprecations](https://goreleaser.com/deprecations/#dockers)),
+published to
 [ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/golang-ci-template-github-actions).
 
-To run goreleaser locally, start the tool with `goreleaser build --snapshot --clean`.
+To run goreleaser locally, start the tool with `goreleaser build --snapshot --clean`
+(see [Build verification](#build-verification) below for how this is also checked in CI).
 
 ## Linting & Test
 
@@ -137,6 +144,13 @@ $ go tool -modfile=tools/go.mod golangci-lint run
 See [Tool dependencies](#tool-dependencies) for why golangci-lint is pinned
 this way.
 
+### Dockerfile linting
+
+[hadolint](https://github.com/hadolint/hadolint), run via
+[hadolint-action](https://github.com/hadolint/hadolint-action), lints the
+[Dockerfile](Dockerfile). Like golangci-lint above, findings are uploaded as
+SARIF but `no-fail: true` keeps the build green regardless of findings.
+
 ### Test
 
 We use the
@@ -147,27 +161,46 @@ Don't forget to enable `Leave comments (x)` in coveralls, under
 `repo settings` > `pull request alerts`, so that the coveralls-action posts a comment
 with the test coverage to affected pull requests:
 
+### Build verification
+
+Since the actual multi-platform docker build (see [Creating a
+release](#creating-a-release)) can only run as part of a real
+`goreleaser release`, the [`build`](.github/workflows/build.yml) workflow
+instead runs `goreleaser build --snapshot --clean` on every push/PR as a fast,
+docker-free smoke check that the code still cross-compiles for all
+configured platforms, using the exact same build config as a real release.
+The resulting binaries are uploaded as a `binaries` workflow artifact so they
+can be downloaded and inspected without waiting for a release.
+
 ## Testing the pipeline
 
-To test the full release pipeline without affecting the `latest` docker tag,
-push a `v99.9.9` tag. The docker image job special-cases this version and skips
-updating `latest`.
+To test the full release pipeline, including the actual multi-arch docker
+build and push, push a pre-release tag, e.g. `v0.0.0-test`. Goreleaser
+recognizes the semver pre-release suffix (the part after the `-`) and
+- marks the created GitHub release as "pre-release" (`release.prerelease: auto`)
+- skips updating the `latest` docker tag (the `latest` entry in `dockers_v2[].tags`
+  is templated as `{{ if not .Prerelease }}latest{{ end }}`, so it renders empty
+  and is dropped for pre-release tags)
 
-To revert everything a `v99.9.9` test release created either click through the Github-UI
-or use these commands:
+both automatically, without needing any special-cased version number.
+
+To revert everything a `v0.0.0-test` test release created either click through
+the Github-UI or use these commands:
 
 ```console
 # delete the GitHub release (keep the tag for now)
-$ gh release delete v99.9.9 --yes
+$ gh release delete v0.0.0-test --yes
 
 # delete the git tag, locally and on the remote
-$ git tag -d v99.9.9 && git push origin :refs/tags/v99.9.9
+$ git tag -d v0.0.0-test && git push origin :refs/tags/v0.0.0-test
 
 # delete the matching docker image version from ghcr.io
-# (the gh CLI's default token lacks package scopes; request them once)
+# (dockers_v2 pushes a single multi-platform manifest per release, so there's
+# just one version to remove; the gh CLI's default token lacks package
+# scopes, so request them once)
 $ gh auth refresh -h github.com -s read:packages,delete:packages
 $ VERSION_ID=$(gh api /user/packages/container/golang-ci-template-github-actions/versions \
-    --jq '.[] | select(.metadata.container.tags[]? == "v99.9.9") | .id')
+    --jq '.[] | select(.metadata.container.tags[]? == "v0.0.0-test") | .id')
 $ gh api --method DELETE /user/packages/container/golang-ci-template-github-actions/versions/$VERSION_ID
 ```
 
