@@ -29,6 +29,15 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end -}}
+# the container image is built, scanned and pushed by
+# .github/workflows/container.yml on every push to master, tagged by commit
+# SHA; .github/workflows/upload_assets.yml promotes that same image to the
+# release tag and "latest" instead of rebuilding it here, so there is no
+# dockers_v2 pipe in this config.
+
+release:
+  prerelease: auto
+
 checksum:
   name_template: 'checksums.txt'
 snapshot:

@@ -46,6 +46,30 @@ jobs:
         uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           sarif_file: ./linter-results.sarif
+          category: golangci-lint
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6 # v3.4.0
+        with:
+          dockerfile: Dockerfile
+          format: sarif
+          output-file: hadolint-results.sarif
+          no-fail: true # findings are reported but never fail the build, see golangci-lint above
+
+      - name: Upload Hadolint SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          sarif_file: ./hadolint-results.sarif
+          category: hadolint
+
+      - name: Check for known Go vulnerabilities
+        # call-graph aware, so it only flags vulnerabilities in code paths
+        # actually reached, not just anything in go.sum; no SARIF output, so
+        # findings show up in the step log rather than the Security tab
+        continue-on-error: true # findings are reported but never fail the build, see golangci-lint above
+        uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+        with:
+          go-version-file: go.mod
 
   test:
     runs-on: ubuntu-latest

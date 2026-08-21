@@ -1,0 +1,134 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+name: build, scan and publish container image
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+      packages: write
+      id-token: write # required for keyless attestation signing
+      attestations: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: Build binaries for all release platforms
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          version: v2
+          args: build --snapshot --clean
+
+      - name: Stage binaries for docker build context
+        run: |
+          set -euo pipefail
+          for arch in amd64 arm64; do
+            dir=$(find dist -maxdepth 1 -type d -name "*_linux_${arch}*" | head -1)
+            mkdir -p "linux/${arch}"
+            cp "${dir}/my-app" "linux/${arch}/my-app"
+          done
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build linux/amd64 image for scanning
+        run: docker buildx build --platform linux/amd64 --load -t container-scan:local .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: container-scan:local
+          format: sarif
+          output: trivy-results.sarif
+          exit-code: '0' # findings are reported but never fail the build, see golangci-lint above
+
+      - name: Upload Trivy SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+      # Fork PRs get a read-only GITHUB_TOKEN and can never push to the
+      # registry, regardless of the `permissions:` block above. Same-repo
+      # branches (including PRs opened from them) and pushes to master can.
+      - name: Determine if this build may publish to the registry
+        id: publish-check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to the Container registry
+        if: steps.publish-check.outputs.publish == 'true'
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build once: this multi-arch image, tagged by commit SHA, is the same
+      # one that gets promoted (not rebuilt) to a version tag at release time
+      # in upload_assets.yml.
+      - name: Build and push multi-arch image tagged by commit SHA
+        id: push
+        if: steps.publish-check.outputs.publish == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      # SBOM + provenance, so consumers can verify what's in the image and
+      # that this workflow actually built it. Reuses Trivy (already used for
+      # vulnerability scanning above) for the SBOM instead of adding a
+      # separate tool like Syft.
+      - name: Generate SBOM
+        if: steps.publish-check.outputs.publish == 'true'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}
+          format: cyclonedx
+          output: sbom.cyclonedx.json
+
+      - name: Attest build provenance
+        if: steps.publish-check.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest SBOM
+        if: steps.publish-check.outputs.publish == 'true'
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          sbom-path: sbom.cyclonedx.json
+          push-to-registry: true

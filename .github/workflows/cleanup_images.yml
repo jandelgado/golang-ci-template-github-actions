@@ -1,0 +1,24 @@
+on:
+  schedule:
+    - cron: '0 3 * * 0' # weekly, Sunday 03:00 UTC
+  workflow_dispatch:
+
+name: cleanup old container images
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      # container.yml pushes a new sha-tagged image on every push/PR build,
+      # which accumulates over time. This prunes old ones while always
+      # keeping release tags (vX.Y.Z), "latest", and the most recent few
+      # commit builds. Container package version filtering by tag can be
+      # finicky - verify via workflow_dispatch after changes.
+      - name: Delete old SHA-tagged images
+        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
+        with:
+          package-name: ${{ github.event.repository.name }}
+          package-type: container
+          min-versions-to-keep: 10
+          ignore-versions: '^(v[0-9]+\.[0-9]+\.[0-9]+.*|latest)$'
