@@ -29,6 +29,31 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end -}}
+dockers_v2:
+  - ids:
+      - go-ci-demo
+    dockerfile: Dockerfile
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    images:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}"
+    tags:
+      - "{{ .FullCommit }}"
+      - "{{ .Tag }}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    labels:
+      org.opencontainers.image.source: "https://github.com/{{ .Env.IMAGE_NAME }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+    annotations:
+      org.opencontainers.image.source: "https://github.com/{{ .Env.IMAGE_NAME }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+
+release:
+  prerelease: auto
+
 checksum:
   name_template: 'checksums.txt'
 snapshot:
