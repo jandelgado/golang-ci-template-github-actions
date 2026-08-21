@@ -1,0 +1,209 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+name: CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+      actions: read # required to upload SARIF from a private repository
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: tools/go.mod
+
+      # fails if go.mod/go.sum are not tidy, rather than tidying them as a
+      # side effect of the build (see the note in .goreleaser.yml)
+      - name: Check that the go module is tidy
+        run: go mod tidy -diff
+
+      - name: Determine golangci-lint version
+        id: golangci-version
+        run: |
+          VERSION=$(go list -m -modfile=tools/go.mod -f '{{.Version}}' github.com/golangci/golangci-lint/v2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Run linters
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          # the action downloads a prebuilt golangci-lint binary, which is
+          # usually faster than compiling it via `go install`; the version
+          # itself stays pinned in tools/go.mod, not duplicated here
+          version: ${{ steps.golangci-version.outputs.version }}
+          problem-matchers: true
+          args: --issues-exit-code=0  --output.sarif.path linter-results.sarif # we expect some findings, but for this demo just continue
+
+      - name: Upload SARIF to Code Scanning
+        # fork pull requests get a read-only GITHUB_TOKEN, so uploading to the
+        # Security tab is rejected there; the findings still show in the step
+        # log above and the run stays green
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          sarif_file: ./linter-results.sarif
+          category: golangci-lint
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6 # v3.4.0
+        with:
+          dockerfile: Dockerfile
+          format: sarif
+          output-file: hadolint-results.sarif
+          no-fail: true # findings are reported but never fail the build, see golangci-lint above
+
+      - name: Upload Hadolint SARIF to Code Scanning
+        continue-on-error: true # see above
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          sarif_file: ./hadolint-results.sarif
+          category: hadolint
+
+      - name: Check for known Go vulnerabilities
+        # call-graph aware, so it only flags vulnerabilities in code paths
+        # actually reached, not just anything in go.sum; no SARIF output, so
+        # findings show up in the step log rather than the Security tab
+        #
+        # the action itself is pinned by digest like every other action here,
+        # but it installs govulncheck@latest internally, and that exception is
+        # deliberate: a security scanner is only as good as its newest
+        # detection logic. The vulnerability database is fetched from
+        # vuln.go.dev at run time and is current either way, but a pinned
+        # binary would freeze the analysis around it - call-graph handling,
+        # support for newer Go releases and module layouts, and fixes for
+        # missed detections all ship in the tool. Reproducibility matters for
+        # things that build the artifact; this step only reports on it, so
+        # "always up to date" beats "always identical" here.
+        continue-on-error: true # findings are reported but never fail the build, see golangci-lint above
+        uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+        with:
+          # the action wraps actions/setup-go and actions/checkout, both of
+          # which already ran in this job; everything below stops it from
+          # doing them a second time.
+          #
+          # go-version-input defaults to "stable" and is handed to setup-go
+          # together with go-version-file. setup-go then warns that both are
+          # set and silently ignores the file, so clearing it is what actually
+          # makes go.mod decide the version.
+          go-version-input: ''
+          go-version-file: go.mod
+          # setup-go keys its cache on the requested version, so this nested
+          # call would restore a *second* archive (key ".../go-stable-...")
+          # over the module cache the first setup-go already unpacked. Module
+          # cache files are read-only, so tar fails with "Cannot open: File
+          # exists" for every entry. The cache from the first setup-go is
+          # still on disk and is all this step needs.
+          cache: false
+          # the repository is already checked out, and a second checkout would
+          # git-clean the workspace out from under later steps
+          repo-checkout: false
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: go test -v -covermode=count -coverprofile=coverage.out
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@8d6379e14d29928660c4ba802d8e85393440b329 # v2.3.8
+        with:
+          github-token: ${{ secrets.github_token }}
+          file: coverage.out
+          format: golang
+
+  build:
+    name: verify goreleaser build (all platforms)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write # to upload the Trivy SARIF report
+      actions: read # required to upload SARIF from a private repository
+      packages: read # to pull Trivy's vulnerability database from ghcr.io
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      # Nothing is published from here - this is a smoke test, so that build
+      # problems surface on the pull request instead of during a release.
+      #
+      # --skip=docker: goreleaser's multi-platform build can only write to the
+      # buildx cache when it isn't pushing, and Trivy cannot scan an image
+      # that exists only there. The image is therefore built once below, for
+      # one platform, in a form that can be scanned. The real multi-platform
+      # image is built and pushed by goreleaser at release time, see
+      # upload_assets.yml.
+      - name: Run GoReleaser build
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          version: v2
+          args: release --snapshot --clean --skip=docker
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: binaries
+          path: dist/*/my-app*
+          retention-days: 7
+
+      # Same Dockerfile and same context layout a release uses, so this also
+      # checks that the two still fit together. linux/amd64 is enough: the OS
+      # package CVEs of the shared distroless base do not differ by
+      # architecture. dist/ is gitignored, so staging inside it keeps the
+      # build context out of the working tree.
+      - name: Build the image for scanning
+        run: |
+          set -euo pipefail
+          install -D dist/*_linux_amd64*/my-app dist/image-context/linux/amd64/my-app
+          docker buildx build --load --platform linux/amd64 \
+            -f Dockerfile -t container-scan:local dist/image-context
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          # Trivy pulls its vulnerability database from ghcr.io, where
+          # anonymous pulls are rate-limited; authenticating as this workflow
+          # avoids intermittent "toomanyrequests" failures
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image-ref: container-scan:local
+          format: sarif
+          output: trivy-results.sarif
+
+      - name: Upload Trivy SARIF to Code Scanning
+        continue-on-error: true # see the golangci-lint upload above
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
