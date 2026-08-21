@@ -2,18 +2,17 @@
 
 [![Build Status](https://github.com/jandelgado/golang-ci-template-github-actions/workflows/run%20tests/badge.svg)](https://github.com/jandelgado/golang-ci-template-github-actions/actions?workflow=run%20tests)
 [![Coverage Status](https://coveralls.io/repos/github/jandelgado/golang-ci-template-github-actions/badge.svg?branch=master)](https://coveralls.io/github/jandelgado/golang-ci-template-github-actions?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jandelgado/golang-ci-template-github-actions)](https://goreportcard.com/report/github.com/jandelgado/golang-ci-template-github-actions)
 
 <!-- vim-markdown-toc GFM -->
 
-* [Info](#info)
-* [Go-Version](#go-version)
-* [Dependabot](#dependabot)
-* [Creating a release](#creating-a-release)
-* [Linting & Test](#linting--test)
-    * [Linter](#linter)
-    * [Test](#test)
-* [Author](#author)
+- [Info](#info)
+- [Go-Version](#go-version)
+- [Dependabot](#dependabot)
+- [Creating a release](#creating-a-release)
+- [Linting & Test](#linting--test)
+  - [Linter](#linter)
+  - [Test](#test)
+- [Author](#author)
 
 <!-- vim-markdown-toc -->
 
@@ -33,11 +32,11 @@ The [release-process](#creating-a-release) is triggered by pushing a git tag to
 the repository.
 
 Finally, a docker image is built, which gets published to
-[ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/my-app).
+[ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/golang-ci-template-github-actions).
 Run it with
 
 ```console
-$ docker run --rm  ghcr.io/jandelgado/my-app:latest
+$ docker run --rm  ghcr.io/jandelgado/golang-ci-template-github-actions:latest
 hello, world!
 ```
 
@@ -63,17 +62,38 @@ $ git push origin v1.2.3
 ```
 
 The push of the new tag triggers the CI, which uses goreleaser with
- [this configuration](.goreleaser.yml) to
+[this configuration](.goreleaser.yml) to
 
-* build multi-platform release artifacts
-* create a new release
-* upload the artifacts, which are then available on the [releases page](/jandelgado/golang-ci-template-github-actions/releases).
+- build multi-platform release artifacts
+- create a new release
+- upload the artifacts, which are then available on the [releases page](/jandelgado/golang-ci-template-github-actions/releases).
 
 Finally, a docker image is built using the previously built artefacts. The image
 is published to
 [ghcr.io](https://github.com/jandelgado/golang-ci-template-github-actions/pkgs/container/golang-ci-template-github-actions).
 
-To run goreleaser locally, start the tool with `gorelaser build --snapshot --clean`.
+To run goreleaser locally, start the tool with `goreleaser build --snapshot --clean`.
+
+## Testing the pipeline
+
+To test the full release pipeline without affecting the `latest` docker tag,
+push a `v99.9.9` tag. The docker image job special-cases this version and skips
+updating `latest`.
+
+To revert everything a `v99.9.9` test release created:
+
+```console
+# delete the GitHub release (keep the tag for now)
+$ gh release delete v99.9.9 --yes
+
+# delete the git tag, locally and on the remote
+$ git tag -d v99.9.9 && git push origin :refs/tags/v99.9.9
+
+# delete the matching docker image version from ghcr.io
+$ VERSION_ID=$(gh api /user/packages/container/golang-ci-template-github-actions/versions \
+    --jq '.[] | select(.metadata.container.tags[]? == "v99.9.9") | .id')
+$ gh api --method DELETE /user/packages/container/golang-ci-template-github-actions/versions/$VERSION_ID
+```
 
 ## Linting & Test
 
@@ -84,6 +104,11 @@ configured for code-linting. The report is uploaded so that linting results
 are visible in the MR:
 
 ![pr screenshot](images/linter.png)
+
+The workflow runs with `--issues-exit-code=0`, so lint findings are reported
+but never fail the build — this is done here only so the demo (which
+intentionally contains a lint finding) stays green. Remove that flag (or set
+it to `1`) if you want linting to actually gate CI in your own project.
 
 ### Test
 
