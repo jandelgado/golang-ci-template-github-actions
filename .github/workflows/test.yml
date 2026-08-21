@@ -7,23 +7,38 @@ on:
       - master
 
 name: run tests
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-            fetch-depth: 0
 
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          go-version-file: tools/go.mod
+
+      - name: Determine golangci-lint version
+        id: golangci-version
+        run: |
+          VERSION=$(go list -m -modfile=tools/go.mod -f '{{.Version}}' github.com/golangci/golangci-lint/v2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Run linters
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
+          # the action downloads a prebuilt golangci-lint binary, which is
+          # usually faster than compiling it via `go install`; the version
+          # itself stays pinned in tools/go.mod, not duplicated here
+          version: ${{ steps.golangci-version.outputs.version }}
           problem-matchers: true
           args: --issues-exit-code=0  --output.sarif.path linter-results.sarif # we expect some findings, but for this demo just continue
 
@@ -34,21 +49,16 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-            fetch-depth: 0
 
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-
-      - name: Verify go version
-        run: |
-          echo "GOVERSION=$(go version)" >> $GITHUB_ENV
-          go version
 
       - name: Run tests
         run: go test -v -covermode=count -coverprofile=coverage.out

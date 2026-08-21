@@ -1,32 +1,48 @@
+---
 version: 2
 updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
+  - package-ecosystem: gomod
+    directory: /
     schedule:
       interval: daily
     commit-message:
-      prefix: "[gomod] "
+      prefix: '[gomod] '
     groups:
       all-dependencies:
-        patterns:
-          - "*"
-  - package-ecosystem: "github-actions"
-    directory: "/"
+        patterns: ['*']
+  - package-ecosystem: gomod
+    directory: /tools
     schedule:
       interval: daily
     commit-message:
-      prefix: "[gh-actions] "
-    groups:
-      all-dependencies:
-        patterns:
-          - "*"
-  - package-ecosystem: "docker"
-    directory: "/"
+      prefix: '[gomod-tools] '
+    # only ever bump the pinned tool itself, never its transitive
+    # dependencies individually because those are golangci-lint's own tested
+    # dependency graph, and should only change as a whole when golangci-lint
+    # itself is bumped (via `go get -tool ...@vX.Y.Z`)
+    #
+    # note: Dependabot does not yet recognize go.mod "tool" directives
+    # (https://github.com/dependabot/dependabot-core/issues/12050, fix
+    # pending in https://github.com/dependabot/dependabot-core/pull/13655),
+    # so as of now this entry won't actually propose golangci-lint bumps
+    # either, this config is prepared for when that support lands.
+    allow:
+      - dependency-name: github.com/golangci/golangci-lint/v2
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
       interval: daily
     commit-message:
-      prefix: "[docker] "
+      prefix: '[gh-actions] '
     groups:
       all-dependencies:
-        patterns:
-          - "*"
+        patterns: ['*']
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: '[docker] '
+    groups:
+      all-dependencies:
+        patterns: ['*']
