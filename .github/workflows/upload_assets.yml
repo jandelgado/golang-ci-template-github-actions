@@ -12,14 +12,17 @@ jobs:
   build:
     name: create assets
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
       packages: write
+      id-token: write # required for keyless attestation signing
+      attestations: write
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-            fetch-depth: 0
+          fetch-depth: 0 # goreleaser builds the changelog from the git history
 
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -38,6 +41,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Builds the binaries, packages the archives, creates the GitHub release
+      # and builds and pushes the multi-platform docker image - all from
+      # .goreleaser.yml.
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
@@ -45,3 +51,24 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Keyless Sigstore signing via this workflow's own OIDC identity - no
+      # secrets and no infrastructure to run. The attestation shows up under
+      # the package's "Attestations" tab and lets anyone verify that this
+      # workflow built the image:
+      #   gh attestation verify oci://ghcr.io/<owner>/<repo>:<tag> --repo <owner>/<repo>
+      - name: Get the digest of the pushed image
+        id: image
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          digest=$(docker buildx imagetools inspect --format '{{.Manifest.Digest}}' "$IMAGE")
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true

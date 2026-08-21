@@ -1,9 +1,11 @@
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 version: 2
-before:
-  hooks:
-    - go mod tidy
+# Deliberately no `before: hooks: - go mod tidy`: a hook that rewrites go.mod
+# and go.sum mid-build would let a release be built from different
+# dependencies than the ones committed, without anyone noticing. The "run
+# tests" workflow asserts the module is tidy with `go mod tidy -diff` instead,
+# which fails rather than silently fixing it.
 project_name: go-ci-demo
 builds:
   - binary: my-app
@@ -12,7 +14,12 @@ builds:
     dir: .
     ldflags:
       - -s -w
-      - -X "main.BuildVersion={{.Tag}}"
+      # .Version renders "1.2.3" for a release and "1.2.4-next" for a snapshot
+      # build, so a binary never claims to be a release it isn't. It is also
+      # the value used for org.opencontainers.image.version below, so the
+      # binary and the image it ships in always agree.
+      - -X "main.BuildVersion={{.Version}}"
+      - -X "main.BuildCommit={{.FullCommit}}"
     goos:
       - linux
       - darwin
