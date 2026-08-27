@@ -43,13 +43,13 @@ jobs:
           args: --issues-exit-code=0  --output.sarif.path linter-results.sarif # we expect some findings, but for this demo just continue
 
       - name: Upload SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
         with:
           sarif_file: ./linter-results.sarif
           category: golangci-lint
 
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@2a66e89f53d0771bb131a7fa31f3136336094aa6 # v3.4.0
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: Dockerfile
           format: sarif
@@ -57,7 +57,7 @@ jobs:
           no-fail: true # findings are reported but never fail the build, see golangci-lint above
 
       - name: Upload Hadolint SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
         with:
           sarif_file: ./hadolint-results.sarif
           category: hadolint
